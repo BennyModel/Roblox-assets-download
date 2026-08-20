@@ -20,6 +20,7 @@ const ALLOWED_PATHS = [
   /^\/v1\/assetId\/\d+$/,
   /^\/asset-delivery-api\/v1\/assetId\/\d+$/,
   /^\/toolbox-service\/v1\/items\/details$/,
+  /^\/sc\d+\/[a-f0-9]{32,}$/i,
   /^\/[a-f0-9]{32,}$/i,
 ];
 
