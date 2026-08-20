@@ -101,7 +101,6 @@ function App() {
           <h1>Roblox Asset Downloader</h1>
           <p>Download publicly available Roblox asset files and textures.</p>
         </div>
-        <a href="./ROBLOX_API_RESEARCH.md">API Research</a>
       </header>
 
       <AssetInput
