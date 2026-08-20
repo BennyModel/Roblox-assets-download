@@ -32,7 +32,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_ROBLOX_PROXY_URL: ${{ vars.VITE_ROBLOX_PROXY_URL }}
+          VITE_ROBLOX_PROXY_URL: https://roblox-asset-downloader-proxy.goodlisform.workers.dev
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
