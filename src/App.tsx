@@ -5,7 +5,6 @@ import { AssetPreview } from "./components/AssetPreview";
 import { AssetInfo } from "./components/AssetInfo";
 import { FileList } from "./components/FileList";
 import { TextureList } from "./components/TextureList";
-import { BundleContents } from "./components/BundleContents";
 import { DownloadPanel } from "./components/DownloadPanel";
 import { ErrorMessage } from "./components/ErrorMessage";
 import { LoadingStatus } from "./components/LoadingStatus";
@@ -113,16 +112,17 @@ function App() {
         <div className="results-grid">
           <AssetPreview asset={resolved} />
           <AssetInfo asset={resolved} />
-          <DownloadPanel
-            includeMetadata={includeMetadata}
-            selectedCount={selectedFiles.length}
-            onIncludeMetadata={setIncludeMetadata}
-            onSelectPreset={selectPreset}
-            onDownload={handleDownload}
-          />
+          <div className="download-column">
+            <DownloadPanel
+              includeMetadata={includeMetadata}
+              selectedCount={selectedFiles.length}
+              onIncludeMetadata={setIncludeMetadata}
+              onSelectPreset={selectPreset}
+              onDownload={handleDownload}
+            />
+            <TextureList textures={resolved.textures} selectedIds={selectedIds} onToggle={toggleFile} />
+          </div>
           <FileList title="Models" files={resolved.models} selectedIds={selectedIds} onToggle={toggleFile} />
-          <TextureList textures={resolved.textures} selectedIds={selectedIds} onToggle={toggleFile} />
-          <BundleContents items={resolved.relatedAssets} />
         </div>
       ) : (
         <section className="empty-state">

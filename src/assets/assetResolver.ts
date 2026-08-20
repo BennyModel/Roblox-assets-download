@@ -4,7 +4,7 @@ import { getCatalogAssetDetails, displayCatalogType } from "../api/roblox/catalo
 import { getBundleDetails } from "../api/roblox/bundles";
 import { getAssetThumbnails } from "../api/roblox/thumbnails";
 import { getUserAvatar } from "../api/roblox/avatar";
-import { resolveUserId } from "../api/roblox/users";
+import { resolveUser } from "../api/roblox/users";
 import { extractNumericId } from "./input";
 import { extractAssetReferences } from "./rbxmParser";
 import { buildGraph, uniqueRelatedAssets } from "./relationshipGraph";
@@ -142,10 +142,10 @@ export async function resolveBundle(input: string, onProgress?: (progress: Resol
 
 export async function resolveAvatar(input: string, onProgress?: (progress: ResolveProgress) => void): Promise<ResolvedAsset> {
   onProgress?.({ label: "Reading asset..." });
-  const userId = await resolveUserId(input);
+  const user = await resolveUser(input);
+  const userId = user.id;
   const avatar = await getUserAvatar(userId);
   const assetIds = avatar.assets.map((asset) => asset.id);
-  const thumbnails = await getAssetThumbnails(assetIds);
 
   onProgress?.({ label: "Checking available files..." });
   const downloads = await mapWithConcurrency(
@@ -165,15 +165,17 @@ export async function resolveAvatar(input: string, onProgress?: (progress: Resol
   onProgress?.({ label: "Ready" });
   return {
     id: userId,
-    name: `Avatar ${userId}`,
+    name: user.name,
     assetType: avatar.playerAvatarType ?? "Avatar",
-    thumbnail: thumbnails.get(assetIds[0]),
+    thumbnail: `https://www.roblox.com/avatar-thumbnail/image?userId=${userId}&width=420&height=420&format=png`,
     models: downloads.filter((item) => !isTextureRole(item.role)),
     textures: downloads.filter((item) => isTextureRole(item.role)),
     relatedAssets: related,
     graph: buildGraph(userId, "Avatar", related),
     metadata: {
       userId,
+      username: user.name,
+      displayName: user.displayName,
       assetType: avatar.playerAvatarType,
       relatedAssetIds: assetIds,
       meshAssetIds: [],

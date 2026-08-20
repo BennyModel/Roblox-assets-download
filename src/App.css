@@ -217,6 +217,12 @@
   gap: 12px;
 }
 
+.download-column {
+  display: grid;
+  align-self: start;
+  gap: 16px;
+}
+
 .preset-row {
   display: flex;
   flex-wrap: wrap;
