@@ -80,6 +80,14 @@ export interface ResolveProgress {
 
 export type ResolverMode = "asset" | "bundle" | "avatar";
 
+export type ModelDownloadFormat = "obj" | "fbx" | "rbxm";
+export type TextureDownloadFormat = "png" | "jpeg";
+
+export interface DownloadFormatSelection {
+  model: ModelDownloadFormat;
+  texture: TextureDownloadFormat;
+}
+
 export class RobloxApiError extends Error {
   code: string;
   status?: number;

@@ -223,6 +223,34 @@
   gap: 16px;
 }
 
+.format-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.format-row label {
+  display: grid;
+  gap: 6px;
+  color: #d7e0e8;
+}
+
+.format-row span {
+  color: #8fa1b1;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.format-row select {
+  min-height: 38px;
+  border: 1px solid #334250;
+  border-radius: 8px;
+  color: #f5f8fb;
+  background: #0d131a;
+  padding: 0 10px;
+}
+
 .preset-row {
   display: flex;
   flex-wrap: wrap;

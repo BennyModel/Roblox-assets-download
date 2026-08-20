@@ -41,9 +41,8 @@ export async function fetchOriginalAsset(
     const blob = await response.blob();
     const signature = await blob.slice(0, 64).arrayBuffer();
     const detected = detectFileType(new Uint8Array(signature), response.headers.get("content-type"), role);
-    const allowed = isAllowedDownloadFormat(role, detected.extension);
 
-    if (!allowed) {
+    if (detected.extension === "json") {
       return {
         assetId,
         name,
@@ -52,7 +51,7 @@ export async function fetchOriginalAsset(
         extension: detected.extension,
         downloadUrl: response.url,
         available: false,
-        status: "Unsupported source format. Only OBJ, FBX, RBXM models and PNG/JPEG textures are downloadable.",
+        status: "Roblox returned JSON instead of an asset source file.",
         source: "Asset Delivery",
         byteLength: blob.size,
       };
@@ -81,12 +80,4 @@ export async function fetchOriginalAsset(
       source: "Asset Delivery",
     };
   }
-}
-
-function isAllowedDownloadFormat(role: DownloadableAsset["role"], extension: string): boolean {
-  if (role === "texture" || role.endsWith("Map") || role === "thumbnail") {
-    return extension === "png" || extension === "jpeg";
-  }
-
-  return extension === "obj" || extension === "fbx" || extension === "rbxm";
 }

@@ -8,10 +8,11 @@ import { TextureList } from "./components/TextureList";
 import { DownloadPanel } from "./components/DownloadPanel";
 import { ErrorMessage } from "./components/ErrorMessage";
 import { LoadingStatus } from "./components/LoadingStatus";
-import type { DownloadableAsset, ResolvedAsset, ResolverMode } from "./types";
+import type { DownloadableAsset, DownloadFormatSelection, ResolvedAsset, ResolverMode } from "./types";
 import { resolveAsset, resolveAvatar, resolveBundle } from "./assets/assetResolver";
 import { buildZip } from "./download/zipBuilder";
-import { buildFileName, downloadBlob, sanitizeFileName } from "./download/downloadFile";
+import { downloadBlob, sanitizeFileName } from "./download/downloadFile";
+import { prepareDownload } from "./download/formatExporter";
 
 function App() {
   const [mode, setMode] = useState<ResolverMode>("asset");
@@ -21,6 +22,7 @@ function App() {
   const [error, setError] = useState("");
   const [resolved, setResolved] = useState<ResolvedAsset>();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [formats, setFormats] = useState<DownloadFormatSelection>({ model: "obj", texture: "png" });
 
   const allFiles = useMemo(
     () => [...(resolved?.models ?? []), ...(resolved?.textures ?? [])],
@@ -73,17 +75,23 @@ function App() {
 
   async function handleDownload() {
     if (!resolved || selectedFiles.length === 0) return;
-    setStatus("Preparing download...");
-    if (selectedFiles.length === 1) {
-      const [file] = selectedFiles;
-      downloadBlob(file.blob!, buildFileName(file));
-      setStatus("Ready");
-      return;
-    }
+    try {
+      setStatus(`Preparing ${formats.model.toUpperCase()} / ${formats.texture.toUpperCase()} download...`);
+      if (selectedFiles.length === 1) {
+        const [file] = selectedFiles;
+        const prepared = await prepareDownload(file, formats);
+        downloadBlob(prepared.blob, prepared.filename);
+        setStatus("Ready");
+        return;
+      }
 
-    const zip = await buildZip(resolved, selectedFiles);
-    downloadBlob(zip, `${sanitizeFileName(resolved.name)}.zip`);
-    setStatus("Ready");
+      const zip = await buildZip(resolved, selectedFiles, formats);
+      downloadBlob(zip, `${sanitizeFileName(resolved.name)}.zip`);
+      setStatus("Ready");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not prepare the selected format.");
+      setStatus("");
+    }
   }
 
   return (
@@ -113,7 +121,9 @@ function App() {
           <AssetInfo asset={resolved} />
           <div className="download-column">
             <DownloadPanel
+              formats={formats}
               selectedCount={selectedFiles.length}
+              onFormatsChange={setFormats}
               onSelectPreset={selectPreset}
               onDownload={handleDownload}
             />
