@@ -21,7 +21,6 @@ function App() {
   const [error, setError] = useState("");
   const [resolved, setResolved] = useState<ResolvedAsset>();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [includeMetadata, setIncludeMetadata] = useState(true);
 
   const allFiles = useMemo(
     () => [...(resolved?.models ?? []), ...(resolved?.textures ?? [])],
@@ -75,14 +74,14 @@ function App() {
   async function handleDownload() {
     if (!resolved || selectedFiles.length === 0) return;
     setStatus("Preparing download...");
-    if (selectedFiles.length === 1 && !includeMetadata) {
+    if (selectedFiles.length === 1) {
       const [file] = selectedFiles;
       downloadBlob(file.blob!, buildFileName(file));
       setStatus("Ready");
       return;
     }
 
-    const zip = await buildZip(resolved, selectedFiles, includeMetadata);
+    const zip = await buildZip(resolved, selectedFiles);
     downloadBlob(zip, `${sanitizeFileName(resolved.name)}.zip`);
     setStatus("Ready");
   }
@@ -114,9 +113,7 @@ function App() {
           <AssetInfo asset={resolved} />
           <div className="download-column">
             <DownloadPanel
-              includeMetadata={includeMetadata}
               selectedCount={selectedFiles.length}
-              onIncludeMetadata={setIncludeMetadata}
               onSelectPreset={selectPreset}
               onDownload={handleDownload}
             />

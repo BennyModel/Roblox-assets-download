@@ -1,12 +1,10 @@
 interface Props {
-  includeMetadata: boolean;
   selectedCount: number;
-  onIncludeMetadata: (value: boolean) => void;
   onSelectPreset: (preset: "all" | "models" | "textures") => void;
   onDownload: () => void;
 }
 
-export function DownloadPanel({ includeMetadata, selectedCount, onIncludeMetadata, onSelectPreset, onDownload }: Props) {
+export function DownloadPanel({ selectedCount, onSelectPreset, onDownload }: Props) {
   return (
     <section className="panel download-panel">
       <p className="eyebrow">Download Options</p>
@@ -21,10 +19,6 @@ export function DownloadPanel({ includeMetadata, selectedCount, onIncludeMetadat
           Textures Only
         </button>
       </div>
-      <label className="metadata-toggle">
-        <input type="checkbox" checked={includeMetadata} onChange={(event) => onIncludeMetadata(event.target.checked)} />
-        Include metadata JSON
-      </label>
       <button className="primary-download" type="button" disabled={selectedCount === 0} onClick={onDownload}>
         Download Selected ({selectedCount})
       </button>

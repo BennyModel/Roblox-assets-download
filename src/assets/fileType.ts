@@ -12,17 +12,20 @@ export function detectFileType(
   }
 
   if (bytes[0] === 0xff && bytes[1] === 0xd8) {
-    return { mimeType: "image/jpeg", extension: "jpg" };
+    return { mimeType: "image/jpeg", extension: "jpeg" };
   }
 
   const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes).trimStart();
   if (text.startsWith("<roblox")) return { mimeType: "application/xml", extension: "rbxm" };
+  if (text.startsWith("; FBX") || text.startsWith("Kaydara FBX Binary")) {
+    return { mimeType: "model/fbx", extension: "fbx" };
+  }
   if (text.startsWith("#") || text.startsWith("v ") || text.includes("\nf ")) {
     return { mimeType: "model/obj", extension: "obj" };
   }
 
   if (type?.includes("png")) return { mimeType: "image/png", extension: "png" };
-  if (type?.includes("jpeg") || type?.includes("jpg")) return { mimeType: "image/jpeg", extension: "jpg" };
+  if (type?.includes("jpeg") || type?.includes("jpg")) return { mimeType: "image/jpeg", extension: "jpeg" };
   if (type?.includes("json")) return { mimeType: "application/json", extension: "json" };
   if (type?.includes("xml")) return { mimeType: "application/xml", extension: "rbxm" };
   if (type?.includes("octet-stream") && role === "mesh") return { mimeType: type, extension: "mesh" };
