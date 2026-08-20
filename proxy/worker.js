@@ -26,7 +26,7 @@ const ALLOWED_PATHS = [
 const MAX_BYTES = 50 * 1024 * 1024;
 
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: corsHeaders() });
     }
@@ -50,16 +50,13 @@ export default {
       return jsonError("Target is not allowed.", 403);
     }
 
-    const upstreamRequest = new Request(targetUrl.toString(), {
-      method: request.method,
-      headers: filteredRequestHeaders(request),
-      body: request.method === "POST" ? request.body : undefined,
-      redirect: "follow",
-    });
+    if (!isAuthorizedProxyRequest(request, env)) {
+      return jsonError("Private proxy token is missing or invalid.", 401);
+    }
 
     let upstream;
     try {
-      upstream = await fetch(upstreamRequest);
+      upstream = await fetchUpstream(request, targetUrl, env);
     } catch {
       return jsonError("Roblox request failed.", 502);
     }
@@ -83,6 +80,37 @@ export default {
   },
 };
 
+async function fetchUpstream(request, targetUrl, env) {
+  const body = request.method === "POST" ? await request.clone().arrayBuffer() : undefined;
+  let upstream = await fetch(
+    new Request(targetUrl.toString(), {
+      method: request.method,
+      headers: filteredRequestHeaders(request, targetUrl, env),
+      body,
+      redirect: "follow",
+    }),
+  );
+
+  const csrfToken = upstream.headers.get("x-csrf-token");
+  if (request.method === "POST" && upstream.status === 403 && csrfToken) {
+    upstream = await fetch(
+      new Request(targetUrl.toString(), {
+        method: request.method,
+        headers: filteredRequestHeaders(request, targetUrl, env, csrfToken),
+        body,
+        redirect: "follow",
+      }),
+    );
+  }
+
+  return upstream;
+}
+
+function isAuthorizedProxyRequest(request, env) {
+  if (!env.ACCESS_TOKEN) return true;
+  return request.headers.get("x-proxy-token") === env.ACCESS_TOKEN;
+}
+
 function isAllowedTarget(url) {
   const hostAllowed =
     ALLOWED_HOSTS.includes(url.hostname) ||
@@ -90,13 +118,27 @@ function isAllowedTarget(url) {
   return hostAllowed && ALLOWED_PATHS.some((pattern) => pattern.test(url.pathname));
 }
 
-function filteredRequestHeaders(request) {
+function filteredRequestHeaders(request, targetUrl, env, csrfToken) {
   const headers = new Headers();
   const contentType = request.headers.get("content-type");
   if (contentType) headers.set("content-type", contentType);
   headers.set("accept", request.headers.get("accept") || "application/json,*/*");
   headers.set("user-agent", "RobloxAssetDownloaderPublicProxy/1.0");
+  if (csrfToken) headers.set("x-csrf-token", csrfToken);
+  if (env.ROBLOX_COOKIE && isRobloxHost(targetUrl.hostname)) {
+    headers.set("cookie", normalizeRobloxCookie(env.ROBLOX_COOKIE));
+  }
   return headers;
+}
+
+function isRobloxHost(hostname) {
+  return hostname === "roblox.com" || hostname.endsWith(".roblox.com");
+}
+
+function normalizeRobloxCookie(value) {
+  const trimmed = String(value).trim();
+  if (trimmed.includes(".ROBLOSECURITY=")) return trimmed;
+  return `.ROBLOSECURITY=${trimmed}`;
 }
 
 function filteredResponseHeaders(source) {
@@ -112,7 +154,7 @@ function corsHeaders() {
   return {
     "access-control-allow-origin": "*",
     "access-control-allow-methods": "GET,POST,OPTIONS",
-    "access-control-allow-headers": "content-type,accept",
+    "access-control-allow-headers": "content-type,accept,x-proxy-token",
     "access-control-max-age": "86400",
   };
 }

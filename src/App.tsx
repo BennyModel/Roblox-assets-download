@@ -23,6 +23,7 @@ function App() {
   const [resolved, setResolved] = useState<ResolvedAsset>();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [formats, setFormats] = useState<DownloadFormatSelection>({ model: "obj", texture: "png" });
+  const [proxyToken, setProxyTokenState] = useState(() => localStorage.getItem("robloxProxyToken") ?? "");
 
   const allFiles = useMemo(
     () => [...(resolved?.models ?? []), ...(resolved?.textures ?? [])],
@@ -73,6 +74,13 @@ function App() {
     setSelectedIds(new Set(files.filter((file) => file.available && file.blob).map(fileKey)));
   }
 
+  function setProxyToken(token: string) {
+    setProxyTokenState(token);
+    const trimmed = token.trim();
+    if (trimmed) localStorage.setItem("robloxProxyToken", trimmed);
+    else localStorage.removeItem("robloxProxyToken");
+  }
+
   async function handleDownload() {
     if (!resolved || selectedFiles.length === 0) return;
     try {
@@ -108,8 +116,10 @@ function App() {
         mode={mode}
         input={input}
         loading={loading}
+        proxyToken={proxyToken}
         onModeChange={setMode}
         onInputChange={setInput}
+        onProxyTokenChange={setProxyToken}
         onSubmit={handleSubmit}
       />
       <LoadingStatus status={status} />

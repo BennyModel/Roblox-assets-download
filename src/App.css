@@ -72,6 +72,20 @@
   padding: 0 14px;
 }
 
+.proxy-token-row {
+  margin-top: 10px;
+}
+
+.proxy-token-row input {
+  width: min(100%, 360px);
+  min-height: 38px;
+  border: 1px solid #26323e;
+  border-radius: 8px;
+  color: #d7e0e8;
+  background: #0d131a;
+  padding: 0 12px;
+}
+
 .field-row button,
 .primary-download {
   min-height: 48px;
