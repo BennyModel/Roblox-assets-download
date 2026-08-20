@@ -30,7 +30,9 @@ export async function robloxFetch<T>(url: string, init?: RequestInit): Promise<T
           ? "User is not authorized to access this asset."
           : response.status === 404
             ? "Asset not found."
-            : body || `Roblox returned HTTP ${response.status}.`;
+            : response.status === 429
+              ? "Roblox is rate limiting requests. Wait a minute, then try again."
+              : extractRobloxError(body) || `Roblox returned HTTP ${response.status}.`;
 
     throw new RobloxApiError(message, "HTTP_ERROR", response.status);
   }
@@ -63,7 +65,9 @@ export async function robloxBlob(url: string, init?: RequestInit): Promise<Respo
           ? "User is not authorized to access this asset."
           : response.status === 404
             ? "No downloadable source found."
-            : text || `Roblox returned HTTP ${response.status}.`;
+            : response.status === 429
+              ? "Roblox is rate limiting downloads. Wait a minute, then try again."
+              : extractRobloxError(text) || `Roblox returned HTTP ${response.status}.`;
     throw new RobloxApiError(message, "DOWNLOAD_BLOCKED", response.status);
   }
 
@@ -81,4 +85,19 @@ export async function safeReadText(response: Response): Promise<string> {
 function toProxyUrl(url: string): string {
   if (!proxyBaseUrl) return url;
   return `${proxyBaseUrl}/?url=${encodeURIComponent(url)}`;
+}
+
+function extractRobloxError(body: string): string | undefined {
+  if (!body) return undefined;
+
+  try {
+    const payload = JSON.parse(body) as {
+      error?: string;
+      errors?: Array<{ message?: string }>;
+      message?: string;
+    };
+    return payload.errors?.[0]?.message || payload.message || payload.error;
+  } catch {
+    return body.length > 220 ? `${body.slice(0, 220)}...` : body;
+  }
 }

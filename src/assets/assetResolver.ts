@@ -10,6 +10,7 @@ import { extractAssetReferences } from "./rbxmParser";
 import { buildGraph, uniqueRelatedAssets } from "./relationshipGraph";
 
 const MAX_DEPTH = 1;
+const DOWNLOAD_CONCURRENCY = 2;
 
 export async function resolveAsset(
   input: string,
@@ -107,8 +108,10 @@ export async function resolveBundle(input: string, onProgress?: (progress: Resol
   }));
 
   onProgress?.({ label: "Checking available files..." });
-  const downloads = await Promise.all(
-    assetItems.map((item) => fetchOriginalAsset(item.id, classifyPrimaryRole(item.name), item.name)),
+  const downloads = await mapWithConcurrency(
+    assetItems,
+    DOWNLOAD_CONCURRENCY,
+    (item) => fetchOriginalAsset(item.id, classifyPrimaryRole(item.name), item.name),
   );
 
   onProgress?.({ label: "Ready" });
@@ -145,8 +148,10 @@ export async function resolveAvatar(input: string, onProgress?: (progress: Resol
   const thumbnails = await getAssetThumbnails(assetIds);
 
   onProgress?.({ label: "Checking available files..." });
-  const downloads = await Promise.all(
-    avatar.assets.map((asset) => fetchOriginalAsset(asset.id, classifyPrimaryRole(asset.assetType?.name ?? asset.name), asset.name)),
+  const downloads = await mapWithConcurrency(
+    avatar.assets,
+    DOWNLOAD_CONCURRENCY,
+    (asset) => fetchOriginalAsset(asset.id, classifyPrimaryRole(asset.assetType?.name ?? asset.name), asset.name),
   );
 
   const related = avatar.assets.map<RelatedAsset>((asset) => ({
@@ -182,15 +187,37 @@ export async function resolveAvatar(input: string, onProgress?: (progress: Resol
 
 async function resolveRelatedDownloads(related: RelatedAsset[], depth: number): Promise<DownloadableAsset[]> {
   if (depth < 0 || related.length === 0) return [];
-  return Promise.all(
-    related.map((item) =>
+  return mapWithConcurrency(
+    related,
+    DOWNLOAD_CONCURRENCY,
+    (item) =>
       fetchOriginalAsset(
         item.assetId,
         item.type === "texture" ? relationshipToTextureRole(item.relationship) : "mesh",
         `${item.relationship} ${item.assetId}`,
       ),
-    ),
   );
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+
+  async function run() {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      results[currentIndex] = await worker(items[currentIndex]);
+    }
+  }
+
+  const workerCount = Math.min(concurrency, items.length);
+  await Promise.all(Array.from({ length: workerCount }, run));
+  return results;
 }
 
 function classifyPrimaryRole(assetType: string): DownloadableAsset["role"] {
