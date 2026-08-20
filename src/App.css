@@ -212,7 +212,9 @@
 
 .download-panel {
   display: grid;
-  gap: 14px;
+  align-items: start;
+  align-self: start;
+  gap: 12px;
 }
 
 .preset-row {
@@ -221,11 +223,22 @@
   gap: 8px;
 }
 
+.download-panel .preset-row button {
+  min-height: 36px;
+  padding: 0 12px;
+}
+
 .metadata-toggle {
   display: flex;
   align-items: center;
   gap: 10px;
   color: #d7e0e8;
+}
+
+.primary-download {
+  width: fit-content;
+  min-width: 190px;
+  min-height: 42px;
 }
 
 .related-grid {
