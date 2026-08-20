@@ -5,10 +5,8 @@ interface Props {
   mode: ResolverMode;
   input: string;
   loading: boolean;
-  proxyToken: string;
   onModeChange: (mode: ResolverMode) => void;
   onInputChange: (input: string) => void;
-  onProxyTokenChange: (token: string) => void;
   onSubmit: () => void;
 }
 
@@ -16,10 +14,8 @@ export function AssetInput({
   mode,
   input,
   loading,
-  proxyToken,
   onModeChange,
   onInputChange,
-  onProxyTokenChange,
   onSubmit,
 }: Props) {
   function handleSubmit(event: FormEvent) {
@@ -51,16 +47,6 @@ export function AssetInput({
         <button type="submit" disabled={loading}>
           {loading ? "Loading..." : mode === "avatar" ? "Load Avatar" : "Load Asset"}
         </button>
-      </div>
-      <div className="proxy-token-row">
-        <input
-          type="password"
-          value={proxyToken}
-          onChange={(event) => onProxyTokenChange(event.target.value)}
-          placeholder="Private proxy token"
-          aria-label="Private proxy token"
-          autoComplete="off"
-        />
       </div>
     </form>
   );

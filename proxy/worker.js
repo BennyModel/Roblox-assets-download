@@ -50,10 +50,6 @@ export default {
       return jsonError("Target is not allowed.", 403);
     }
 
-    if (!isAuthorizedProxyRequest(request, env)) {
-      return jsonError("Private proxy token is missing or invalid.", 401);
-    }
-
     let upstream;
     try {
       upstream = await fetchUpstream(request, targetUrl, env);
@@ -106,11 +102,6 @@ async function fetchUpstream(request, targetUrl, env) {
   return upstream;
 }
 
-function isAuthorizedProxyRequest(request, env) {
-  if (!env.ACCESS_TOKEN) return true;
-  return request.headers.get("x-proxy-token") === env.ACCESS_TOKEN;
-}
-
 function isAllowedTarget(url) {
   const hostAllowed =
     ALLOWED_HOSTS.includes(url.hostname) ||
@@ -154,7 +145,7 @@ function corsHeaders() {
   return {
     "access-control-allow-origin": "*",
     "access-control-allow-methods": "GET,POST,OPTIONS",
-    "access-control-allow-headers": "content-type,accept,x-proxy-token",
+    "access-control-allow-headers": "content-type,accept",
     "access-control-max-age": "86400",
   };
 }

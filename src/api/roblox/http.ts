@@ -11,7 +11,6 @@ export async function robloxFetch<T>(url: string, init?: RequestInit): Promise<T
       credentials: "omit",
       headers: {
         accept: "application/json",
-        ...proxyTokenHeader(),
         ...(init?.headers ?? {}),
       },
     });
@@ -48,10 +47,6 @@ export async function robloxBlob(url: string, init?: RequestInit): Promise<Respo
     response = await fetch(toProxyUrl(url), {
       ...init,
       credentials: "omit",
-      headers: {
-        ...proxyTokenHeader(),
-        ...(init?.headers ?? {}),
-      },
       redirect: "follow",
     });
   } catch {
@@ -90,11 +85,6 @@ export async function safeReadText(response: Response): Promise<string> {
 function toProxyUrl(url: string): string {
   if (!proxyBaseUrl) return url;
   return `${proxyBaseUrl}/?url=${encodeURIComponent(url)}`;
-}
-
-function proxyTokenHeader(): HeadersInit {
-  const token = localStorage.getItem("robloxProxyToken")?.trim();
-  return token ? { "x-proxy-token": token } : {};
 }
 
 function extractRobloxError(body: string): string | undefined {
