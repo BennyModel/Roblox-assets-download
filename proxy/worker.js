@@ -13,6 +13,7 @@ const ALLOWED_PATHS = [
   /^\/v1\/catalog\/items\/details$/,
   /^\/v1\/bundles\/\d+\/details$/,
   /^\/v1\/assets$/,
+  /^\/v1\/users\/avatar$/,
   /^\/v1\/usernames\/users$/,
   /^\/v1\/users\/\d+\/avatar$/,
   /^\/v1\/users\/\d+\/currently-wearing$/,

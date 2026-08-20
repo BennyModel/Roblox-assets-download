@@ -2,7 +2,7 @@ import type { DownloadableAsset, RelatedAsset, ResolveProgress, ResolvedAsset } 
 import { fetchOriginalAsset } from "../api/roblox/assetDelivery";
 import { getCatalogAssetDetails, displayCatalogType } from "../api/roblox/catalog";
 import { getBundleDetails } from "../api/roblox/bundles";
-import { getAssetThumbnails } from "../api/roblox/thumbnails";
+import { getAssetThumbnails, getAvatarThumbnails } from "../api/roblox/thumbnails";
 import { getUserAvatar } from "../api/roblox/avatar";
 import { resolveUser } from "../api/roblox/users";
 import { extractNumericId } from "./input";
@@ -146,6 +146,7 @@ export async function resolveAvatar(input: string, onProgress?: (progress: Resol
   const userId = user.id;
   const avatar = await getUserAvatar(userId);
   const assetIds = avatar.assets.map((asset) => asset.id);
+  const thumbnails = await getAvatarThumbnails([userId]);
 
   onProgress?.({ label: "Checking available files..." });
   const downloads = await mapWithConcurrency(
@@ -167,7 +168,7 @@ export async function resolveAvatar(input: string, onProgress?: (progress: Resol
     id: userId,
     name: user.name,
     assetType: avatar.playerAvatarType ?? "Avatar",
-    thumbnail: `https://www.roblox.com/avatar-thumbnail/image?userId=${userId}&width=420&height=420&format=png`,
+    thumbnail: thumbnails.get(userId),
     models: downloads.filter((item) => !isTextureRole(item.role)),
     textures: downloads.filter((item) => isTextureRole(item.role)),
     relatedAssets: related,
